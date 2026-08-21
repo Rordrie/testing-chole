@@ -25,7 +25,7 @@
         
         header {
             text-align: center;
-            color: white;
+            color: #333;
             margin-bottom: 30px;
         }
         
@@ -340,7 +340,7 @@
 <body>
     <div class="container">
         <header>
-            <h1>Cholera Outbreak Prediction</h1>
+            <h1>🦠 Cholera Outbreak Prediction</h1>
             <p>Nigeria Public Health Analytics Model</p>
         </header>
         
@@ -459,8 +459,8 @@
             })
             .then(data => {
                 modelData = data;
-                document.getElementById('model-status').className = 'model-status model-ready';
-                document.getElementById('model-status').textContent = '✅ Model loaded successfully (' + data.n_trees + ' decision trees)';
+                // Hide the loading banner completely once the model is ready
+                document.getElementById('model-status').style.display = 'none';
                 document.getElementById('predict-btn').disabled = false;
             })
             .catch(error => {
