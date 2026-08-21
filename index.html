@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cholera Outbreak Prediction Model</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: white;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+        
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            padding: 30px;
+            margin-bottom: 20px;
+        }
+        
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            header h1 {
+                font-size: 1.8em;
+            }
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        label {
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #333;
+        }
+        
+        label .range-value {
+            font-size: 0.85em;
+            color: #666;
+            font-weight: normal;
+        }
+        
+        input[type="number"],
+        input[type="range"] {
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+            font-size: 1em;
+        }
+        
+        input[type="number"]:focus,
+        input[type="range"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 5px rgba(102, 126, 234, 0.3);
+        }
+        
+        input[type="range"] {
+            padding: 0;
+            cursor: pointer;
+        }
+        
+        .range-display {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-top: 10px;
+        }
+        
+        .value-box {
+            background: #f5f5f5;
+            padding: 8px 12px;
+            border-radius: 5px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        button {
+            flex: 1;
+            padding: 12px 20px;
+            font-size: 1em;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+        
+        .btn-predict {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-predict:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-example {
+            background: #f0f0f0;
+            color: #333;
+        }
+        
+        .btn-example:hover {
+            background: #e0e0e0;
+        }
+        
+        .results {
+            display: none;
+            margin-top: 30px;
+        }
+        
+        .results.show {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .risk-box {
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 1.2em;
+        }
+        
+        .risk-very-low {
+            background: #d4edda;
+            color: #155724;
+            border: 2px solid #28a745;
+        }
+        
+        .risk-low {
+            background: #fff3cd;
+            color: #856404;
+            border: 2px solid #ffc107;
+        }
+        
+        .risk-moderate {
+            background: #ffe5cc;
+            color: #cc5200;
+            border: 2px solid #ff9800;
+        }
+        
+        .risk-high {
+            background: #f8d7da;
+            color: #721c24;
+            border: 2px solid #dc3545;
+        }
+        
+        .risk-very-high {
+            background: #f5c6cb;
+            color: #721c24;
+            border: 3px solid #c82333;
+        }
+        
+        .result-details {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .result-detail-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .result-detail-item:last-child {
+            border-bottom: none;
+        }
+        
+        .detail-label {
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .detail-value {
+            color: #667eea;
+            font-weight: bold;
+        }
+        
+        .recommendations {
+            background: #e7f3ff;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        
+        .recommendations h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .recommendations ul {
+            margin-left: 20px;
+            color: #333;
+        }
+        
+        .recommendations li {
+            margin-bottom: 8px;
+        }
+        
+        .example-section {
+            margin-top: 30px;
+        }
+        
+        .example-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        
+        .example-btn {
+            padding: 10px;
+            background: #f0f0f0;
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .example-btn:hover {
+            border-color: #667eea;
+            background: #f9f9f9;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            color: #667eea;
+        }
+        
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .model-status {
+            text-align: center;
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+
+        .model-loading {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .model-ready {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .model-error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        footer {
+            text-align: center;
+            color: #666;
+            margin-top: 40px;
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🦠 Cholera Outbreak Prediction</h1>
+            <p>Nigeria Public Health Analytics Model</p>
+        </header>
+        
+        <div class="card">
+            <div class="model-status model-loading" id="model-status">
+                ⏳ Loading prediction model...
+            </div>
+
+            <h2>Environmental &amp; Socioeconomic Conditions</h2>
+            
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="rainfall">🌧️ Rainfall (mm/month)</label>
+                    <input type="range" id="rainfall" min="10" max="300" value="150" oninput="updateValue('rainfall', this.value)">
+                    <div class="range-display">
+                        <span>10</span>
+                        <div class="value-box" id="rainfall-value">150</div>
+                        <span>300</span>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="temperature">🌡️ Temperature (°C)</label>
+                    <input type="range" id="temperature" min="20" max="35" value="27" oninput="updateValue('temperature', this.value)">
+                    <div class="range-display">
+                        <span>20</span>
+                        <div class="value-box" id="temperature-value">27</div>
+                        <span>35</span>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="density">👥 Population Density (people/km²)</label>
+                    <input type="range" id="density" min="50" max="5000" value="500" oninput="updateValue('density', this.value)">
+                    <div class="range-display">
+                        <span>50</span>
+                        <div class="value-box" id="density-value">500</div>
+                        <span>5000</span>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="sanitation">🚽 Sanitation Coverage (%)</label>
+                    <input type="range" id="sanitation" min="20" max="95" value="50" oninput="updateValue('sanitation', this.value)">
+                    <div class="range-display">
+                        <span>20</span>
+                        <div class="value-box" id="sanitation-value">50</div>
+                        <span>95</span>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="water">💧 Water Access (%)</label>
+                    <input type="range" id="water" min="20" max="95" value="55" oninput="updateValue('water', this.value)">
+                    <div class="range-display">
+                        <span>20</span>
+                        <div class="value-box" id="water-value">55</div>
+                        <span>95</span>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="awareness">📚 Health Awareness (%)</label>
+                    <input type="range" id="awareness" min="20" max="90" value="50" oninput="updateValue('awareness', this.value)">
+                    <div class="range-display">
+                        <span>20</span>
+                        <div class="value-box" id="awareness-value">50</div>
+                        <span>90</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="button-group">
+                <button class="btn-predict" onclick="predict()" id="predict-btn" disabled>🔮 Predict Outbreak Risk</button>
+            </div>
+            
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Analyzing data...</p>
+            </div>
+            
+            <div class="results" id="results">
+                <div id="risk-display"></div>
+                <div class="result-details" id="result-details"></div>
+                <div class="recommendations" id="recommendations"></div>
+            </div>
+            
+            <div class="example-section">
+                <h3>📍 Quick Examples</h3>
+                <div class="example-buttons">
+                    <button class="example-btn" onclick="loadExample('lagos')">Lagos - Rainy Season</button>
+                    <button class="example-btn" onclick="loadExample('bauchi')">Bauchi - Dry Season</button>
+                    <button class="example-btn" onclick="loadExample('kano')">Kano - Peak Rainy</button>
+                    <button class="example-btn" onclick="loadExample('improved')">Improved Conditions</button>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>Cholera Prediction Model | Nigeria Public Health Data Analysis</p>
+            <p>Final Year Project | Osun State University</p>
+        </footer>
+    </div>
+    
+    <script>
+        // =====================================================================
+        // MODEL DATA - loaded from JSON file (exported from scikit-learn)
+        // =====================================================================
+        let modelData = null;
+
+        // Load the model JSON file
+        fetch('cholera_model_data.json')
+            .then(response => {
+                if (!response.ok) throw new Error('Model file not found');
+                return response.json();
+            })
+            .then(data => {
+                modelData = data;
+                document.getElementById('model-status').className = 'model-status model-ready';
+                document.getElementById('model-status').textContent = '✅ Model loaded successfully (' + data.n_trees + ' decision trees)';
+                document.getElementById('predict-btn').disabled = false;
+            })
+            .catch(error => {
+                document.getElementById('model-status').className = 'model-status model-error';
+                document.getElementById('model-status').textContent = '❌ Error loading model: ' + error.message;
+                console.error('Model loading error:', error);
+            });
+
+        // =====================================================================
+        // RANDOM FOREST PREDICTION ENGINE (runs entirely in the browser)
+        // =====================================================================
+
+        /**
+         * Scale input features using StandardScaler parameters.
+         * Formula: scaled = (value - mean) / scale
+         */
+        function scaleFeatures(features) {
+            return features.map((val, i) => 
+                (val - modelData.scaler_mean[i]) / modelData.scaler_scale[i]
+            );
+        }
+
+        /**
+         * Traverse a single decision tree and return leaf probabilities.
+         * Each node is either:
+         *   - A split node: { f: feature_index, t: threshold, l: left_child, r: right_child }
+         *   - A leaf node:  { v: [prob_class_0, prob_class_1] }
+         */
+        function predictTree(node, features) {
+            // Leaf node - return class probabilities
+            if (node.v !== undefined) {
+                return node.v;
+            }
+            // Decision node - go left if feature <= threshold, else right
+            if (features[node.f] <= node.t) {
+                return predictTree(node.l, features);
+            } else {
+                return predictTree(node.r, features);
+            }
+        }
+
+        /**
+         * Run the full Random Forest: average predictions across all trees.
+         * Returns [prob_no_outbreak, prob_outbreak]
+         */
+        function predictRandomForest(rawFeatures) {
+            const scaledFeatures = scaleFeatures(rawFeatures);
+            
+            let sumProb0 = 0;
+            let sumProb1 = 0;
+            
+            for (const tree of modelData.trees) {
+                const probs = predictTree(tree, scaledFeatures);
+                sumProb0 += probs[0];
+                sumProb1 += probs[1];
+            }
+            
+            const nTrees = modelData.trees.length;
+            return [sumProb0 / nTrees, sumProb1 / nTrees];
+        }
+
+        // =====================================================================
+        // UI LOGIC (same as original Flask app)
+        // =====================================================================
+
+        const examples = {
+            lagos: {
+                rainfall: 200,
+                temperature: 25,
+                density: 4200,
+                sanitation: 65,
+                water: 75,
+                awareness: 70
+            },
+            bauchi: {
+                rainfall: 30,
+                temperature: 30,
+                density: 150,
+                sanitation: 35,
+                water: 40,
+                awareness: 30
+            },
+            kano: {
+                rainfall: 250,
+                temperature: 24,
+                density: 1200,
+                sanitation: 45,
+                water: 50,
+                awareness: 40
+            },
+            improved: {
+                rainfall: 150,
+                temperature: 27,
+                density: 300,
+                sanitation: 80,
+                water: 85,
+                awareness: 80
+            }
+        };
+        
+        function updateValue(field, value) {
+            document.getElementById(field + '-value').textContent = value;
+        }
+        
+        function loadExample(example) {
+            const data = examples[example];
+            document.getElementById('rainfall').value = data.rainfall;
+            document.getElementById('temperature').value = data.temperature;
+            document.getElementById('density').value = data.density;
+            document.getElementById('sanitation').value = data.sanitation;
+            document.getElementById('water').value = data.water;
+            document.getElementById('awareness').value = data.awareness;
+            
+            updateValue('rainfall', data.rainfall);
+            updateValue('temperature', data.temperature);
+            updateValue('density', data.density);
+            updateValue('sanitation', data.sanitation);
+            updateValue('water', data.water);
+            updateValue('awareness', data.awareness);
+            
+            predict();
+        }
+        
+        function predict() {
+            if (!modelData) {
+                alert('Model is still loading. Please wait...');
+                return;
+            }
+
+            const rainfall = parseFloat(document.getElementById('rainfall').value);
+            const temperature = parseFloat(document.getElementById('temperature').value);
+            const density = parseFloat(document.getElementById('density').value);
+            const sanitation = parseFloat(document.getElementById('sanitation').value);
+            const water = parseFloat(document.getElementById('water').value);
+            const awareness = parseFloat(document.getElementById('awareness').value);
+            
+            // Feature order: Rainfall_mm, Temperature_C, Population_Density, 
+            //                Sanitation_Coverage, Water_Access, Health_Awareness
+            const features = [rainfall, temperature, density, sanitation, water, awareness];
+
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('results').classList.remove('show');
+            
+            // Run prediction (use setTimeout to let the UI update with loading spinner)
+            setTimeout(() => {
+                const probabilities = predictRandomForest(features);
+                const outbreakProb = probabilities[1] * 100;
+                const confidence = Math.max(probabilities[0], probabilities[1]) * 100;
+                const prediction = probabilities[1] > 0.5 ? 1 : 0;
+
+                // Determine risk level (same logic as Flask app)
+                let riskLevel;
+                if (outbreakProb < 20) {
+                    riskLevel = "🟢 VERY LOW RISK";
+                } else if (outbreakProb < 40) {
+                    riskLevel = "🟡 LOW RISK";
+                } else if (outbreakProb < 60) {
+                    riskLevel = "🟠 MODERATE RISK";
+                } else if (outbreakProb < 80) {
+                    riskLevel = "🔴 HIGH RISK";
+                } else {
+                    riskLevel = "🔴 VERY HIGH RISK";
+                }
+
+                const result = {
+                    prediction: prediction,
+                    outbreak_probability: outbreakProb,
+                    risk_level: riskLevel,
+                    confidence: confidence
+                };
+
+                displayResults(result);
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('results').classList.add('show');
+            }, 100);
+        }
+        
+        function displayResults(result) {
+            const probability = result.outbreak_probability;
+            const riskLabel = result.risk_level;
+            
+            let riskClass = 'risk-very-low';
+            if (probability < 20) riskClass = 'risk-very-low';
+            else if (probability < 40) riskClass = 'risk-low';
+            else if (probability < 60) riskClass = 'risk-moderate';
+            else if (probability < 80) riskClass = 'risk-high';
+            else riskClass = 'risk-very-high';
+            
+            const riskEmoji = probability > 70 ? '🔴' : probability > 50 ? '🟠' : probability > 30 ? '🟡' : '🟢';
+            
+            document.getElementById('risk-display').innerHTML = `
+                <div class="risk-box ${riskClass}">
+                    ${riskEmoji} <strong>${riskLabel}</strong><br>
+                    Outbreak Probability: <strong>${probability.toFixed(1)}%</strong>
+                </div>
+            `;
+            
+            document.getElementById('result-details').innerHTML = `
+                <div class="result-detail-item">
+                    <span class="detail-label">Outbreak Probability</span>
+                    <span class="detail-value">${probability.toFixed(2)}%</span>
+                </div>
+                <div class="result-detail-item">
+                    <span class="detail-label">No Outbreak Probability</span>
+                    <span class="detail-value">${(100 - probability).toFixed(2)}%</span>
+                </div>
+                <div class="result-detail-item">
+                    <span class="detail-label">Model Confidence</span>
+                    <span class="detail-value">${result.confidence.toFixed(2)}%</span>
+                </div>
+            `;
+            
+            let recommendations = '';
+            if (probability > 70) {
+                recommendations = `
+                    <h3>⚠️ High Risk - Recommended Actions:</h3>
+                    <ul>
+                        <li>Activate emergency response protocols</li>
+                        <li>Increase disease surveillance</li>
+                        <li>Prepare isolation and treatment facilities</li>
+                        <li>Launch public health campaigns</li>
+                        <li>Improve water and sanitation services</li>
+                        <li>Stock emergency medical supplies</li>
+                    </ul>
+                `;
+            } else if (probability > 50) {
+                recommendations = `
+                    <h3>🟠 Moderate Risk - Recommended Actions:</h3>
+                    <ul>
+                        <li>Increase surveillance monitoring</li>
+                        <li>Prepare response teams</li>
+                        <li>Improve water access and sanitation</li>
+                        <li>Conduct public awareness campaigns</li>
+                    </ul>
+                `;
+            } else if (probability > 30) {
+                recommendations = `
+                    <h3>🟡 Low Risk - Recommended Actions:</h3>
+                    <ul>
+                        <li>Maintain routine surveillance</li>
+                        <li>Continue prevention programs</li>
+                        <li>Monitor environmental conditions</li>
+                    </ul>
+                `;
+            } else {
+                recommendations = `
+                    <h3>✅ Very Low Risk:</h3>
+                    <ul>
+                        <li>Continue routine prevention measures</li>
+                        <li>Maintain water and sanitation standards</li>
+                        <li>Sustain health awareness programs</li>
+                    </ul>
+                `;
+            }
+            
+            document.getElementById('recommendations').innerHTML = recommendations;
+        }
+    </script>
+</body>
+</html>
